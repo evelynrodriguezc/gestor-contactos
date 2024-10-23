@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de Contactos</title>
+</head>
+<body>
+    <h1>Gestor de Contactos</h1>
+    <h2>Agregar Contacto</h2>
+    <form id="add-contact-form">
+        <input type="text" id="nombre" placeholder="Nombre: " required>
+        <input type="text" id="telefono" placeholder="Telefono" required>
+        <button type="submit">Agregar</button>
+    </form>
+    <h2>Contactos</h2>
+    <ul id="contact-list"></ul>
+    <h2>Buscar Contacto</h2>
+    <input type="text" id="search" placeholder="Nombrea buscar: ">
+    <button id="search-btn">Buscar</button>
+    <ul id="search-results"></ul>
+    <script>
+        document.getElementById('add-contact-form').onsubmit = async function(e){
+            e.preventDefault()
+            const nombre = document.getElementById('nombre').value;
+            const telefono = document.getElementById('telefono').value;
+            await fetch('/contactos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type' : 'application/json'
+                },
+                body: JSON.stringify({nombre, telefono})
+            })
+            document.getElementById('nombre').value = '';
+            document.getElementById('telefono').value = '';
+            cargarContactos()
+        }
+        document.getElementById('search-btn').onclick = async function(){
+            const nombre = document.getElementById('search').value;
+            const response = await fetch(`/contactos/buscar?nombre=${nombre}`);
+            const resultados = await response.json();
+            const searchResults = document.getElementById('search-results');
+            searchResults.innerHTML = '';
+            if(resultados.length > 0){
+                resultados.forEach(contacto => {
+                    const li = document.createElement('li');
+                    li.textContent = `${contacto.nombre} - ${contacto.telefono}`;
+                    searchResults.appendChild(li);
+                })
+            }else{
+                searchResults.innerHTML = '<li>No se encontraron contactos.</li>';
+            }
+        }
+        async function cargarContactos(){
+            const response = await fetch('/contactos');
+            const contactos = await response.json();
+            const contactList = document.getElementById('contact-list');
+            contactList.innerHTML= '';
+            contactos.forEach(contacto => {
+                const li = document.createElement('li');
+                li.textContent = `${contacto.nombre} - ${contacto.telefono}`;
+                contactList.appendChild(li);
+            })
+        }
+        cargarContactos();
+    </script>
+</body>
+</html>
